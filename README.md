@@ -184,27 +184,27 @@ Show current configuration and setup help.
 
 ## Supported Models
 
-### Alibaba (15 endpoints)
+### Alibaba
 
 Wan 2.6, 2.5, 2.2, 2.1 series, Happy Horse 1.0 — text/image-to-video, text/image-to-image, VACE editing, keyframe interpolation.
 
-### Google (7 endpoints)
+### Google
 
 Nano Banana, Nano Banana 2, Nano Banana Pro (T2I + edit), Veo 3 (T2V + I2V).
 
-### KlingAI (7 endpoints)
+### KlingAI
 
 Kling V3 and V3 Omni — T2V, I2V, Ref2V, V2V, video editing with multi-shot and sound.
 
-### Midjourney (2 endpoints)
+### Midjourney
 
 Diffusion (T2I) and Video (T2V/I2V).
 
-### MiniMax (4 endpoints)
+### MiniMax
 
 Speech 2.8 HD/Turbo (TTS), Music 2.0/2.5 (TTM) — mulerun only.
 
-### OpenAI (2 endpoints)
+### OpenAI
 
 GPT Image 2 (T2I + edit) — mulerouter only.
 
