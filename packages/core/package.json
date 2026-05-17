@@ -1,0 +1,43 @@
+{
+  "name": "@mulerouter/core",
+  "version": "0.3.0",
+  "description": "Core library for MuleRouter/MuleRun multimodal AI APIs",
+  "type": "module",
+  "license": "MIT",
+  "author": "MuleRouter Team <support@mulerouter.ai>",
+  "homepage": "https://github.com/openmule/mulerouter-cli/tree/main/packages/core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openmule/mulerouter-cli.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/openmule/mulerouter-cli/issues"
+  },
+  "keywords": [
+    "mulerouter",
+    "mulerun",
+    "ai",
+    "multimodal",
+    "api-client"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {}
+}

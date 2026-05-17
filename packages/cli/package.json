@@ -1,0 +1,48 @@
+{
+  "name": "mulerouter",
+  "version": "0.3.0",
+  "description": "CLI for MuleRouter/MuleRun multimodal AI APIs — generate images, videos, speech, and music",
+  "type": "module",
+  "license": "MIT",
+  "author": "MuleRouter Team <support@mulerouter.ai>",
+  "homepage": "https://github.com/openmule/mulerouter-cli",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openmule/mulerouter-cli.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/openmule/mulerouter-cli/issues"
+  },
+  "keywords": [
+    "mulerouter",
+    "mulerun",
+    "ai",
+    "multimodal",
+    "image-generation",
+    "video-generation",
+    "text-to-image",
+    "text-to-video",
+    "text-to-speech",
+    "text-to-music",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "mulerouter": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mulerouter/core": "workspace:*",
+    "commander": "^14.0.3",
+    "picocolors": "^1.1.1"
+  }
+}

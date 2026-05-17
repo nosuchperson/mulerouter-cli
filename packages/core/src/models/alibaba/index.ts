@@ -1,0 +1,15 @@
+import "./wan2.6-t2v.js";
+import "./wan2.6-i2v.js";
+import "./wan2.6-t2i.js";
+import "./wan2.6-image.js";
+import "./wan2.5-t2v-preview.js";
+import "./wan2.5-i2v-preview.js";
+import "./wan2.5-t2i-preview.js";
+import "./wan2.5-i2i-preview.js";
+import "./wan2.2-t2v-plus.js";
+import "./wan2.2-i2v-plus.js";
+import "./wan2.2-i2v-flash.js";
+import "./wan2.1-vace-plus.js";
+import "./wan2.1-kf2v-plus.js";
+import "./happy-horse-1-0-t2v.js";
+import "./happy-horse-1-0-i2v.js";
