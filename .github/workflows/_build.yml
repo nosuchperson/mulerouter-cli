@@ -1,0 +1,45 @@
+name: Build (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      artifact-retention-days:
+        type: number
+        default: 1
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint, Build, Typecheck, Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        # version auto-detected from package.json "packageManager" field
+
+      - name: Cache bun install
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run build
+      - run: bun run typecheck
+      - run: bun run test
+
+      - name: Upload built dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/cli/dist
+            packages/core/dist
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}

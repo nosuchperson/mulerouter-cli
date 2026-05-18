@@ -9,31 +9,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  check:
-    name: Lint, Typecheck, Build, Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run lint
-      - run: bun run typecheck
-      - run: bun run build
-      - run: bun run test
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: |
-            packages/cli/dist
-            packages/core/dist
-          if-no-files-found: error
-          retention-days: 1
+  build:
+    uses: ./.github/workflows/_build.yml
 
   smoke:
     name: Smoke (Node ${{ matrix.node }})
-    needs: check
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -41,17 +27,52 @@ jobs:
         node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - name: Download built artifacts
+
+      - name: Download built dist
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: packages
-      - name: CLI runs
-        run: node packages/cli/dist/cli.js --version
-      - name: CLI list works (exercises core import path)
-        run: node packages/cli/dist/cli.js list --json > /dev/null
-      - name: Core loads
-        run: node -e "import('./packages/core/dist/index.js').then(m => { if (!m.loadConfig) process.exit(1); })"
+
+      - name: Pack and install in a clean directory
+        run: |
+          set -euo pipefail
+          # Simulate what `npm publish` would emit: it rewrites `workspace:*`
+          # to a concrete version range in the published tarball, but
+          # `npm pack` alone does NOT do that rewrite. We do the equivalent
+          # rewrite to `file:../core` locally so the packed cli tarball has
+          # an installable dependency reference. This file edit lives only
+          # on the throwaway runner.
+          node -e "
+            const fs = require('fs');
+            const p = 'packages/cli/package.json';
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (j.dependencies['@mulerouter/core'] === 'workspace:*') {
+              j.dependencies['@mulerouter/core'] = 'file:../core';
+            }
+            fs.writeFileSync(p, JSON.stringify(j, null, 2));
+          "
+          core_tgz=$(cd packages/core && npm pack --silent)
+          cli_tgz=$(cd packages/cli && npm pack --silent)
+          mkdir -p /tmp/smoke
+          cd /tmp/smoke
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --no-save \
+            "$GITHUB_WORKSPACE/packages/core/$core_tgz" \
+            "$GITHUB_WORKSPACE/packages/cli/$cli_tgz"
+
+      - name: CLI --version
+        working-directory: /tmp/smoke
+        run: npx --no-install mulerouter --version
+
+      - name: CLI list --json (exercises core import path)
+        working-directory: /tmp/smoke
+        run: npx --no-install mulerouter list --json > /dev/null
+
+      - name: Core loads via package name
+        working-directory: /tmp/smoke
+        run: node -e "import('@mulerouter/core').then(m => { if (!m.loadConfig) process.exit(1); })"

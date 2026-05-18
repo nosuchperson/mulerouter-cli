@@ -6,35 +6,28 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build & Verify
+    uses: ./.github/workflows/_build.yml
+    with:
+      artifact-retention-days: 7
+
+  verify:
+    name: Verify tag matches package versions
+    needs: build
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run lint
-      - run: bun run typecheck
-      - run: bun run test
-      - run: bun run build
-
-      - name: Smoke test built artifacts
+      - id: version
         run: |
-          node packages/cli/dist/cli.js --version
-          node packages/cli/dist/cli.js list --json > /dev/null
-          node -e "import('./packages/core/dist/index.js').then(m => { if (!m.loadConfig) process.exit(1); })"
-
-      - name: Verify tag matches package versions
-        id: version
-        run: |
+          set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
           cli=$(node -p "require('./packages/cli/package.json').version")
           core=$(node -p "require('./packages/core/package.json').version")
@@ -45,33 +38,35 @@ jobs:
           fi
           echo "version=$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Upload built dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: |
-            packages/cli/dist
-            packages/core/dist
-          if-no-files-found: error
-          retention-days: 7
-
   publish:
-    name: Publish to npm (v${{ needs.build.outputs.version }})
-    needs: build
+    name: Publish to npm (v${{ needs.verify.outputs.version }})
+    needs: [build, verify]
     runs-on: ubuntu-latest
     environment:
       name: npm-publish
-      url: https://www.npmjs.com/package/mulerouter/v/${{ needs.build.outputs.version }}
+      url: https://www.npmjs.com/package/mulerouter/v/${{ needs.verify.outputs.version }}
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+
       - uses: oven-sh/setup-bun@v2
+        # version auto-detected from package.json "packageManager" field
+
+      - name: Cache bun install
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
       - run: bun install --frozen-lockfile
 
       - name: Download built dist
@@ -80,8 +75,8 @@ jobs:
           name: dist
           path: packages
 
-      - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
-        run: npm install -g npm@latest
+      - name: Pin npm to a Trusted-Publishing-capable version
+        run: npm install -g npm@11.5.1
 
       - name: Publish @mulerouter/core
         working-directory: packages/core
