@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-05-18
+
+### Changed
+- `MULEROUTER_SITE` is now optional and defaults to `mulerouter`
+- CI restructured: single bun job for lint/typecheck/build/test, separate Node 18/20/22 smoke matrix on built artifacts
+- Publish workflow split into build + manual-approval publish jobs using npm Trusted Publishing (no NPM_TOKEN required)
+- Publish workflow verifies tag matches package versions before publishing
+
 ## [0.3.0] - 2026-05-15
 
 ### Added
