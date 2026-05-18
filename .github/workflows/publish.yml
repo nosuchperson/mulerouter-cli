@@ -78,6 +78,24 @@ jobs:
       - name: Pin npm to a Trusted-Publishing-capable version
         run: npm install -g npm@11.5.1
 
+      - name: Rewrite workspace:* to concrete version in cli package.json
+        # npm publish does NOT rewrite `workspace:*` (unlike bun/pnpm publish),
+        # so the published tarball would otherwise ship a broken dependency
+        # spec that no installer can resolve. Rewrite to ^<version> first.
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = 'packages/cli/package.json';
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (j.dependencies['@mulerouter/core'] === 'workspace:*') {
+              j.dependencies['@mulerouter/core'] = '^' + process.env.VERSION;
+            }
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+            console.log('cli @mulerouter/core ->', j.dependencies['@mulerouter/core']);
+          "
+
       - name: Publish @mulerouter/core
         working-directory: packages/core
         run: npm publish --provenance --access public

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-05-18
+
+### Fixed
+- Published `mulerouter` CLI tarball previously shipped `"@mulerouter/core": "workspace:*"` because `npm publish` does not rewrite the workspace protocol. Installers (`npm`, `bun`, `yarn`) failed to resolve the dependency. Publish workflow now rewrites `workspace:*` to `^<version>` before publishing.
+
 ## [0.3.1] - 2026-05-18
 
 ### Changed
