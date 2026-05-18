@@ -172,8 +172,8 @@ Show current configuration and setup help.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `MULEROUTER_API_KEY` | Yes | API key for authentication |
-| `MULEROUTER_BASE_URL` | One of these | Custom API base URL (takes priority) |
-| `MULEROUTER_SITE` | required | Site: `mulerouter` or `mulerun` |
+| `MULEROUTER_BASE_URL` | No | Custom API base URL (takes priority over `MULEROUTER_SITE`) |
+| `MULEROUTER_SITE` | No | Site: `mulerouter` or `mulerun` (default: `mulerouter`) |
 
 **Priority:** CLI arguments > environment variables > `.env` file
 

@@ -101,9 +101,11 @@ describe("config", () => {
       expect(() => loadConfig()).toThrow("API key not found");
     });
 
-    it("should throw when neither baseUrl nor site is provided", () => {
+    it("should default to mulerouter site when neither baseUrl nor site is provided", () => {
       process.env.MULEROUTER_API_KEY = "key";
-      expect(() => loadConfig()).toThrow("Configuration not specified");
+      const config = loadConfig();
+      expect(config.site).toBe("mulerouter");
+      expect(config.baseUrl).toBe("https://api.mulerouter.ai");
     });
 
     it("should throw for invalid site", () => {

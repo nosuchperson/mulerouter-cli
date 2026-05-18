@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--wait` flag on status command for polling until task completion
 - `--no-wait` output now shows follow-up `status` commands for easy copy-paste
 - `--key=value` syntax support for unknown CLI options (in addition to `--key value`)
-- GitHub Actions CI workflow (lint, typecheck, test on Node 18/20/22, build)
+- GitHub Actions CI workflow (lint, typecheck, build, test on bun; smoke tests on Node 18/20/22)
 - GitHub Actions publish workflow (npm publish with provenance on release)
 - npm publish provenance support for supply-chain transparency
 

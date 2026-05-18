@@ -10,32 +10,48 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint & Typecheck
+  check:
+    name: Lint, Typecheck, Build, Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run lint
-      - run: bun run build
       - run: bun run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
       - run: bun run build
       - run: bun run test
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/cli/dist
+            packages/core/dist
+          if-no-files-found: error
+          retention-days: 1
 
-  build:
-    name: Build
+  smoke:
+    name: Smoke (Node ${{ matrix.node }})
+    needs: check
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: packages
+      - name: CLI runs
+        run: node packages/cli/dist/cli.js --version
+      - name: CLI list works (exercises core import path)
+        run: node packages/cli/dist/cli.js list --json > /dev/null
+      - name: Core loads
+        run: node -e "import('./packages/core/dist/index.js').then(m => { if (!m.loadConfig) process.exit(1); })"

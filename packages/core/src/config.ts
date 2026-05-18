@@ -97,15 +97,7 @@ export function loadConfig(options?: {
     baseUrl = resolvedBaseUrl;
   } else {
     const siteStr = options?.site || process.env.MULEROUTER_SITE;
-    if (!siteStr) {
-      throw new Error(
-        "Configuration not specified. Please set either:\n" +
-          "  - MULEROUTER_BASE_URL environment variable, or\n" +
-          "  - MULEROUTER_SITE environment variable to 'mulerouter' or 'mulerun'\n" +
-          "You can also provide --base-url or --site arguments.",
-      );
-    }
-    resolvedSite = parseSite(siteStr);
+    resolvedSite = siteStr ? parseSite(siteStr) : "mulerouter";
     baseUrl = SITE_URLS[resolvedSite];
   }
 
@@ -132,12 +124,12 @@ export function loadConfig(options?: {
 export function getConfigHelp(): string {
   return `Configuration Options:
 ---------------------
-Environment Variables (Required):
+Environment Variables:
   MULEROUTER_API_KEY    API key for authentication (required)
 
-  One of the following (MULEROUTER_BASE_URL takes priority):
+  Optional (MULEROUTER_BASE_URL takes priority over MULEROUTER_SITE):
   MULEROUTER_BASE_URL   Custom API base URL (e.g., https://api.mulerouter.ai)
-  MULEROUTER_SITE       API site: 'mulerouter' or 'mulerun'
+  MULEROUTER_SITE       API site: 'mulerouter' or 'mulerun' (default: mulerouter)
 
 .env File:
   Create a .env file in the current directory with the above variables.
