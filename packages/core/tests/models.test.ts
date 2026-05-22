@@ -9,19 +9,112 @@ describe("models", () => {
 
   it("should register all expected endpoints", () => {
     const all = registry.listAll();
-    // Sum of per-provider counts below: 15 + 7 + 7 + 2 + 4 + 2 = 37
-    expect(all.length).toBeGreaterThanOrEqual(37);
+    // Sum of per-provider counts below: 15 + 6 + 7 + 7 + 2 + 4 + 2 = 43
+    expect(all.length).toBeGreaterThanOrEqual(43);
   });
 
   it("should register all expected providers", () => {
     const providers = registry.getProviders();
     expect(providers).toContain("alibaba");
+    expect(providers).toContain("bytedance");
     expect(providers).toContain("google");
     expect(providers).toContain("klingai");
     expect(providers).toContain("midjourney");
     expect(providers).toContain("minimax");
     expect(providers).toContain("openai");
-    expect(providers.length).toBeGreaterThanOrEqual(6);
+    expect(providers.length).toBeGreaterThanOrEqual(7);
+  });
+
+  describe("bytedance", () => {
+    it("should have 6 endpoints", () => {
+      const endpoints = registry.listByProvider("bytedance");
+      expect(endpoints).toHaveLength(6);
+    });
+
+    it("should register all seedance-2.0 actions", () => {
+      const t2v = registry.get("bytedance/seedance-2.0", "text-to-video");
+      const i2v = registry.get("bytedance/seedance-2.0", "image-to-video");
+      const r2v = registry.get("bytedance/seedance-2.0", "reference-to-video");
+      expect(t2v).toBeDefined();
+      expect(i2v).toBeDefined();
+      expect(r2v).toBeDefined();
+      expect(t2v?.apiPath).toBe("/vendors/bytedance/v1/seedance-2.0/text-to-video/generation");
+      expect(i2v?.apiPath).toBe("/vendors/bytedance/v1/seedance-2.0/image-to-video/generation");
+      expect(r2v?.apiPath).toBe("/vendors/bytedance/v1/seedance-2.0/reference-to-video/generation");
+    });
+
+    it("should register all seedance-2.0-fast actions", () => {
+      expect(registry.get("bytedance/seedance-2.0-fast", "text-to-video")).toBeDefined();
+      expect(registry.get("bytedance/seedance-2.0-fast", "image-to-video")).toBeDefined();
+      expect(registry.get("bytedance/seedance-2.0-fast", "reference-to-video")).toBeDefined();
+    });
+
+    it("should use 'videos' as resultKey for all 6 endpoints", () => {
+      const endpoints = registry.listByProvider("bytedance");
+      expect(endpoints.every((e) => e.resultKey === "videos")).toBe(true);
+      expect(endpoints.every((e) => e.outputType === "video")).toBe(true);
+    });
+
+    it("should be available on both mulerouter and mulerun", () => {
+      const endpoints = registry.listByProvider("bytedance");
+      for (const e of endpoints) {
+        expect(e.availableOn).toContain("mulerouter");
+        expect(e.availableOn).toContain("mulerun");
+      }
+    });
+
+    it("seedance-2.0 T2V should require prompt and accept camera_fixed/watermark", () => {
+      const t2v = registry.get("bytedance/seedance-2.0", "text-to-video");
+      const prompt = t2v?.parameters.find((p) => p.name === "prompt");
+      expect(prompt?.required).toBe(true);
+      const names = t2v?.parameters.map((p) => p.name) ?? [];
+      expect(names).toContain("camera_fixed");
+      expect(names).toContain("watermark");
+      const resolution = t2v?.parameters.find((p) => p.name === "resolution");
+      expect(resolution?.enum).toContain("1080p");
+    });
+
+    it("seedance-2.0-fast T2V should omit camera_fixed/watermark and reject 1080p", () => {
+      const t2v = registry.get("bytedance/seedance-2.0-fast", "text-to-video");
+      const names = t2v?.parameters.map((p) => p.name) ?? [];
+      expect(names).not.toContain("camera_fixed");
+      expect(names).not.toContain("watermark");
+      const resolution = t2v?.parameters.find((p) => p.name === "resolution");
+      expect(resolution?.enum).not.toContain("1080p");
+      expect(resolution?.enum).toContain("720p");
+    });
+
+    it("seedance-2.0 I2V should require image and accept 1080p", () => {
+      const i2v = registry.get("bytedance/seedance-2.0", "image-to-video");
+      const image = i2v?.parameters.find((p) => p.name === "image");
+      expect(image?.required).toBe(true);
+      const lastFrame = i2v?.parameters.find((p) => p.name === "last_frame_image");
+      expect(lastFrame).toBeDefined();
+      expect(lastFrame?.required).not.toBe(true);
+      const resolution = i2v?.parameters.find((p) => p.name === "resolution");
+      expect(resolution?.enum).toContain("1080p");
+    });
+
+    it("seedance-2.0 R2V should expose images/videos/audios as arrays (no single required)", () => {
+      const r2v = registry.get("bytedance/seedance-2.0", "reference-to-video");
+      const images = r2v?.parameters.find((p) => p.name === "images");
+      const videos = r2v?.parameters.find((p) => p.name === "videos");
+      const audios = r2v?.parameters.find((p) => p.name === "audios");
+      expect(images?.type).toBe("array");
+      expect(videos?.type).toBe("array");
+      expect(audios?.type).toBe("array");
+      // conditional required (images OR videos) is enforced server-side, not by CLI
+      expect(images?.required).not.toBe(true);
+      expect(videos?.required).not.toBe(true);
+    });
+
+    it("should NOT define `model` as a CLI parameter (auto-injected by mule-router)", () => {
+      const endpoints = registry.listByProvider("bytedance");
+      for (const e of endpoints) {
+        const names = e.parameters.map((p) => p.name);
+        expect(names).not.toContain("model");
+      }
+    });
   });
 
   describe("alibaba", () => {
@@ -185,7 +278,7 @@ describe("models", () => {
       expect(videos.length).toBeGreaterThan(0);
       expect(audios.length).toBe(4); // minimax only
 
-      expect(images.length + videos.length + audios.length).toBeGreaterThanOrEqual(37);
+      expect(images.length + videos.length + audios.length).toBeGreaterThanOrEqual(43);
     });
 
     it("should filter SOTA models", () => {

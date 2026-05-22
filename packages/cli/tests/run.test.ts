@@ -100,4 +100,27 @@ describe("run command internals", () => {
       });
     });
   });
+
+  describe("seedance endpoint resolution", () => {
+    it("should resolve 3-part seedance identifiers", () => {
+      const t2v = resolveEndpoint("bytedance/seedance-2.0/text-to-video");
+      expect(t2v.provider).toBe("bytedance");
+      expect(t2v.action).toBe("text-to-video");
+      expect(t2v.apiPath).toBe("/vendors/bytedance/v1/seedance-2.0/text-to-video/generation");
+      expect(t2v.resultKey).toBe("videos");
+    });
+
+    it("should throw for 2-part seedance identifier (ambiguous: 3 actions)", () => {
+      expect(() => resolveEndpoint("bytedance/seedance-2.0")).toThrow("Multiple actions");
+    });
+
+    it("should distinguish std vs fast variants", () => {
+      const std = resolveEndpoint("bytedance/seedance-2.0/text-to-video");
+      const fast = resolveEndpoint("bytedance/seedance-2.0-fast/text-to-video");
+      expect(std.modelName).toBe("seedance-2.0");
+      expect(fast.modelName).toBe("seedance-2.0-fast");
+      expect(std.parameters.find((p) => p.name === "camera_fixed")).toBeDefined();
+      expect(fast.parameters.find((p) => p.name === "camera_fixed")).toBeUndefined();
+    });
+  });
 });
