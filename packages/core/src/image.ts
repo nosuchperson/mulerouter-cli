@@ -8,6 +8,7 @@ export const IMAGE_PARAM_NAMES = new Set([
   "images",
   "first_frame",
   "last_frame",
+  "last_frame_image",
   "first_frame_url",
   "last_frame_url",
   "ref_images_url",

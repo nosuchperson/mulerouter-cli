@@ -1,5 +1,6 @@
 // Import all vendor modules to register their endpoints with the global registry.
 import "./alibaba/index.js";
+import "./bytedance/index.js";
 import "./google/index.js";
 import "./klingai/index.js";
 import "./midjourney/index.js";
