@@ -142,7 +142,8 @@ describe("models", () => {
     it("should include wan2.1-vace-plus aligned with VideoEditPayload union", () => {
       const endpoint = registry.get("alibaba/wan2.1-vace-plus", "generation");
       expect(endpoint).toBeDefined();
-      const params = endpoint!.parameters;
+      if (!endpoint) return;
+      const params = endpoint.parameters;
 
       // function enum: 5 new upstream-accepted values, no legacy values
       const funcParam = params.find((p) => p.name === "function");
@@ -288,7 +289,7 @@ describe("models", () => {
       });
       const audioSetting = result?.audio_setting as Record<string, unknown> | undefined;
       expect(audioSetting).toBeDefined();
-      expect(Object.keys(audioSetting!)).not.toContain("output_format");
+      expect(Object.keys(audioSetting ?? {})).not.toContain("output_format");
       expect(result?.output_format).toBe("url");
     });
 

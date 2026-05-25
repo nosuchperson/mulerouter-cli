@@ -128,7 +128,8 @@ const endpoint: ModelEndpoint = {
     {
       name: "top_scale",
       type: "number",
-      description: "video_outpainting only: upward expansion scale, 1.0–2.0 (default 1.0 = no expansion).",
+      description:
+        "video_outpainting only: upward expansion scale, 1.0–2.0 (default 1.0 = no expansion).",
     },
     {
       name: "bottom_scale",
