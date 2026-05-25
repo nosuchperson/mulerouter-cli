@@ -51,7 +51,7 @@ const endpoint: ModelEndpoint = {
       name: "obj_or_bg",
       type: "array",
       description:
-        "image_reference only: per-image role tags, parallel to --images. Each entry 'obj' or 'bg'. 'bg' may appear at most once. Required when --images has length > 1.",
+        "image_reference only: per-image role tags, parallel to --images. Each entry 'obj' or 'bg'. 'bg' may appear at most once. ⚠ Upstream Bailian requires length == --images length EVEN for a single image (mule-router accepts None for single image but Bailian rejects with InvalidParameter); for 1 image pass '[\"obj\"]' or '[\"bg\"]'. Required when --images length > 1.",
     },
     {
       name: "video_url",
