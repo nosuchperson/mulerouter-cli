@@ -227,10 +227,29 @@ describe("models", () => {
         voice_id: "Charming_Lady",
         speed: 1.0,
         audio_format: "mp3",
+        output_format: "url",
       });
       expect(result?.prompt).toBe("Hello");
       expect(result?.voice_setting).toEqual({ voice_id: "Charming_Lady", speed: 1.0 });
       expect(result?.audio_setting).toEqual({ format: "mp3" });
+      // output_format must be at body root, NOT under audio_setting
+      expect(result?.output_format).toBe("url");
+    });
+
+    it("should not nest output_format under audio_setting (regression: upstream schema)", () => {
+      // Upstream ExternalSpeechGenerationRequest declares output_format at body root.
+      // Nesting it inside audio_setting causes pydantic to silently drop it → default HEX.
+      const speech = registry.get("minimax/speech-2.8-turbo", "generation");
+      const result = speech?.buildRequestBody?.({
+        prompt: "regression",
+        voice_id: "male-qn-qingse",
+        audio_format: "mp3",
+        output_format: "url",
+      });
+      const audioSetting = result?.audio_setting as Record<string, unknown> | undefined;
+      expect(audioSetting).toBeDefined();
+      expect(Object.keys(audioSetting!)).not.toContain("output_format");
+      expect(result?.output_format).toBe("url");
     });
 
     it("should have custom buildRequestBody for music models", () => {
