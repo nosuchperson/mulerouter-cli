@@ -139,13 +139,54 @@ describe("models", () => {
       expect(endpoint?.resultKey).toBe("images");
     });
 
-    it("should include wan2.1-vace-plus with VACE functions", () => {
+    it("should include wan2.1-vace-plus aligned with VideoEditPayload union", () => {
       const endpoint = registry.get("alibaba/wan2.1-vace-plus", "generation");
       expect(endpoint).toBeDefined();
-      const funcParam = endpoint?.parameters.find((p) => p.name === "function");
+      if (!endpoint) return;
+      const params = endpoint.parameters;
+
+      // function enum: 5 new upstream-accepted values, no legacy values
+      const funcParam = params.find((p) => p.name === "function");
       expect(funcParam?.required).toBe(true);
-      expect(funcParam?.enum).toContain("outpainting");
-      expect(funcParam?.enum).toContain("inpainting");
+      expect(funcParam?.enum).toEqual(
+        expect.arrayContaining([
+          "image_reference",
+          "video_repainting",
+          "video_edit",
+          "video_extension",
+          "video_outpainting",
+        ]),
+      );
+      expect(funcParam?.enum).toHaveLength(5);
+
+      // negative_prompt removed (not in VideoEditBasePayload)
+      expect(params.find((p) => p.name === "negative_prompt")).toBeUndefined();
+
+      // ref_images_url renamed to images (array)
+      expect(params.find((p) => p.name === "ref_images_url")).toBeUndefined();
+      const images = params.find((p) => p.name === "images");
+      expect(images?.type).toBe("array");
+
+      // obj_or_bg retyped string → array
+      expect(params.find((p) => p.name === "obj_or_bg")?.type).toBe("array");
+
+      // mask_frame_id retyped string → integer
+      expect(params.find((p) => p.name === "mask_frame_id")?.type).toBe("integer");
+
+      // enum constraints from upstream Literal types
+      expect(params.find((p) => p.name === "mask_type")?.enum).toEqual(["tracking", "fixed"]);
+      expect(params.find((p) => p.name === "expand_mode")?.enum).toEqual([
+        "hull",
+        "bbox",
+        "orginal",
+      ]);
+      expect(params.find((p) => p.name === "size")?.enum).toEqual([
+        "1280x720",
+        "720x1280",
+        "960x960",
+        "832x1088",
+        "1088x832",
+      ]);
     });
   });
 
@@ -227,10 +268,29 @@ describe("models", () => {
         voice_id: "Charming_Lady",
         speed: 1.0,
         audio_format: "mp3",
+        output_format: "url",
       });
       expect(result?.prompt).toBe("Hello");
       expect(result?.voice_setting).toEqual({ voice_id: "Charming_Lady", speed: 1.0 });
       expect(result?.audio_setting).toEqual({ format: "mp3" });
+      // output_format must be at body root, NOT under audio_setting
+      expect(result?.output_format).toBe("url");
+    });
+
+    it("should not nest output_format under audio_setting (regression: upstream schema)", () => {
+      // Upstream ExternalSpeechGenerationRequest declares output_format at body root.
+      // Nesting it inside audio_setting causes pydantic to silently drop it → default HEX.
+      const speech = registry.get("minimax/speech-2.8-turbo", "generation");
+      const result = speech?.buildRequestBody?.({
+        prompt: "regression",
+        voice_id: "male-qn-qingse",
+        audio_format: "mp3",
+        output_format: "url",
+      });
+      const audioSetting = result?.audio_setting as Record<string, unknown> | undefined;
+      expect(audioSetting).toBeDefined();
+      expect(Object.keys(audioSetting ?? {})).not.toContain("output_format");
+      expect(result?.output_format).toBe("url");
     });
 
     it("should have custom buildRequestBody for music models", () => {

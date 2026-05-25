@@ -19,7 +19,6 @@ export function buildSpeechRequestBody(params: Record<string, unknown>): Record<
   if (Object.keys(voiceSetting).length > 0) body.voice_setting = voiceSetting;
 
   const audioSetting: Record<string, unknown> = {};
-  if (params.output_format !== undefined) audioSetting.output_format = params.output_format;
   if (params.audio_format !== undefined) audioSetting.format = params.audio_format;
   if (params.sample_rate !== undefined) audioSetting.sample_rate = params.sample_rate;
   if (params.bitrate !== undefined) audioSetting.bitrate = params.bitrate;
@@ -28,6 +27,11 @@ export function buildSpeechRequestBody(params: Record<string, unknown>): Record<
   if (params.english_normalization !== undefined) {
     body.english_normalization = params.english_normalization;
   }
+
+  // output_format belongs at body root per upstream ExternalSpeechGenerationRequest
+  // schema (mule-router tasks/handlers/minimax/models/external.py:254). Nesting it
+  // under audio_setting causes upstream pydantic to silently drop it and default to HEX.
+  if (params.output_format !== undefined) body.output_format = params.output_format;
 
   return body;
 }
@@ -81,7 +85,13 @@ export const speechParameters: ModelParameter[] = [
     description:
       "Optimize for a specific language (e.g., zh, en, ja, ko, es, pt, fr, id, de, ru, it, ar, tr, uk, nl, vi, th, pl, ro, el, cs, fi, hi)",
   },
-  { name: "output_format", type: "string", description: "Output format", enum: ["url", "hex"] },
+  {
+    name: "output_format",
+    type: "string",
+    description:
+      "Output schema for audios[0]. 'url' → HTTPS download link (recommended). 'hex' → hex-encoded raw audio bytes (decode with `xxd -r -p > out.mp3`); the bytes are an MP3 with ID3 header regardless of --audio-format. Upstream MiniMax default: hex.",
+    enum: ["url", "hex"],
+  },
   {
     name: "audio_format",
     type: "string",

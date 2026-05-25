@@ -62,11 +62,12 @@ describe("run command internals", () => {
         language_boost: "English",
       });
       expect(result.audio_setting).toEqual({
-        output_format: "url",
         format: "mp3",
         sample_rate: 44100,
         bitrate: 128000,
       });
+      // output_format is at body root per upstream schema, NOT inside audio_setting
+      expect(result.output_format).toBe("url");
       expect(result.english_normalization).toBe(true);
     });
 
