@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-05-27
+
+### Fixed
+- `alibaba/wan2.1-vace-plus`: aligned endpoint with the `VideoEditPayload` union schema.
+- `minimax/speech`: place `output_format` at the body root instead of nested under `audio_setting`.
+
+### Docs
+- `alibaba/wan2.1-vace-plus`: note that Bailian requires `obj_or_bg` even for a single image.
+
 ## [0.3.2] - 2026-05-18
 
 ### Fixed
